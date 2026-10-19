@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'bestScore', 'totalSessions', 'totalDigitsRecalled', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.bestScore is number && data.bestScore >= 0 &&
+             data.totalSessions is number && data.totalSessions >= 0 &&
+             data.totalDigitsRecalled is number && data.totalDigitsRecalled >= 0 &&
+             (!('currentStreak' in data) || (data.currentStreak is number && data.currentStreak >= 0)) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('lastActiveDate' in data) || (data.lastActiveDate is string && data.lastActiveDate.size() <= 50)) &&
+             data.createdAt is string && data.createdAt.size() <= 100 &&
+             data.updatedAt is string && data.updatedAt.size() <= 100;
+    }
+
+    function isValidPracticeSession(data) {
+      return data.keys().hasAll(['userId', 'score', 'totalAttempted', 'accuracy', 'durationSeconds', 'mode', 'createdAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.score is number && data.score >= 0 &&
+             data.totalAttempted is number && data.totalAttempted >= 0 &&
+             data.accuracy is number && data.accuracy >= 0 && data.accuracy <= 100 &&
+             data.durationSeconds is number && data.durationSeconds >= 0 &&
+             data.mode is string && data.mode.size() <= 50 &&
+             (!('targetChunk' in data) || (data.targetChunk is string && data.targetChunk.size() <= 100)) &&
+             (!('firstMistakeIndex' in data) || (data.firstMistakeIndex is number)) &&
+             data.createdAt is string && data.createdAt.size() <= 100;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming()) && incoming().userId == userId;
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming()) && incoming().userId == existing().userId;
+      allow delete: if false;
+
+      match /sessions/{sessionId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(sessionId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(sessionId) && isValidPracticeSession(incoming()) && incoming().userId == userId;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

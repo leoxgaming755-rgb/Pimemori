@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with high scores and aggregated memory statistics.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address."
+        },
+        "bestScore": {
+          "type": "number",
+          "description": "Highest number of digits correctly memorized and recalled."
+        },
+        "totalSessions": {
+          "type": "number",
+          "description": "Total number of completed practice or test sessions."
+        },
+        "totalDigitsRecalled": {
+          "type": "number",
+          "description": "Cumulative count of correct digits typed across all sessions."
+        },
+        "currentStreak": {
+          "type": "number",
+          "description": "Consecutive days of memory practice."
+        },
+        "lastActiveDate": {
+          "type": "string",
+          "description": "Date of last practice session in YYYY-MM-DD format."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp."
+        }
+      },
+      "required": ["userId", "bestScore", "totalSessions", "totalDigitsRecalled", "createdAt", "updatedAt"]
+    },
+    "PracticeSession": {
+      "title": "PracticeSession",
+      "description": "Record of an individual memorization session or test run.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID."
+        },
+        "score": {
+          "type": "number",
+          "description": "Number of consecutive correct digits."
+        },
+        "totalAttempted": {
+          "type": "number",
+          "description": "Total digits entered."
+        },
+        "accuracy": {
+          "type": "number",
+          "description": "Accuracy percentage (0 to 100)."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "Duration of the session in seconds."
+        },
+        "mode": {
+          "type": "string",
+          "description": "Session mode: full_test, chunk_practice, or flashcard.",
+          "enum": ["full_test", "chunk_practice", "flashcard"]
+        },
+        "targetChunk": {
+          "type": "string",
+          "description": "Identifier or range of chunk practiced, e.g. 'all', '1-50', etc."
+        },
+        "firstMistakeIndex": {
+          "type": "number",
+          "description": "The 0-based digit index where the first error occurred, or -1 if perfect."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the session was completed."
+        }
+      },
+      "required": ["userId", "score", "totalAttempted", "accuracy", "durationSeconds", "mode", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user-level stats, best score, streak, and preferences."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "PracticeSession",
+      "description": "Stores history of memorization and practice sessions for the user."
+    }
+  }
+}

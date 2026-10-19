@@ -1,0 +1,6 @@
+{
+  "name": "PiMemory - Latihan & Stor Hafalan 1000 Digit Pi",
+  "description": "Aplikasi latihan dan stor hafalan deretan 1000 digit Pi dengan pengecekan otomatis real-time, sinkronisasi database lintas perangkat, dan statistik performa harian.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
